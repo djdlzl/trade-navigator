@@ -6,13 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Settings2, TrendingUp, TrendingDown, StopCircle } from "lucide-react";
+import { AlertTriangle, Settings2, TrendingUp, TrendingDown, StopCircle, Loader2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Strategies() {
   const [strategies, setStrategies] = useState<Strategy[]>(initialStrategies);
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(strategies[0]);
+  const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
 
   const handleToggleStrategy = (id: string, active: boolean) => {
@@ -51,8 +63,21 @@ export default function Strategies() {
     }
     toast({
       title: "긴급 정지 실행",
-      description: "모든 전략이 중지되었습니다.",
+      description: "모든 포지션이 청산되고 주문이 중단되었습니다.",
       variant: "destructive",
+    });
+  };
+
+  const handleApplyToBackend = async () => {
+    setIsApplying(true);
+    
+    // Simulate API call to backend
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setIsApplying(false);
+    toast({
+      title: "백엔드 적용 완료",
+      description: `${selectedStrategy?.name} 전략 파라미터가 매매 엔진에 즉시 적용되었습니다.`,
     });
   };
 
@@ -71,15 +96,46 @@ export default function Strategies() {
           <h1 className="text-2xl font-bold">전략 관리</h1>
           <p className="text-muted-foreground mt-1">전략 파라미터를 수정하고 실행 상태를 관리하세요</p>
         </div>
-        <Button
-          variant="destructive"
-          size="lg"
-          onClick={handleEmergencyStop}
-          className="gap-2"
-        >
-          <StopCircle className="w-5 h-5" />
-          긴급 정지
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              size="lg"
+              className="gap-2"
+            >
+              <StopCircle className="w-5 h-5" />
+              긴급 정지
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                긴급 정지 확인
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-base">
+                <span className="font-medium text-foreground">모든 포지션을 청산하고 주문을 중단하시겠습니까?</span>
+                <br />
+                <br />
+                이 작업은 다음을 수행합니다:
+                <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
+                  <li>실행 중인 모든 전략 즉시 중지</li>
+                  <li>미체결 주문 전량 취소</li>
+                  <li>보유 포지션 시장가 청산</li>
+                </ul>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleEmergencyStop}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                긴급 정지 실행
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -162,8 +218,8 @@ export default function Strategies() {
                   <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/30">
                     <AlertTriangle className="w-5 h-5 text-warning" />
                     <div>
-                      <p className="font-medium text-warning">API 연결 오류</p>
-                      <p className="text-sm text-muted-foreground">증권사 API 연결을 확인해주세요</p>
+                      <p className="font-medium text-warning">매매 엔진 연결 오류</p>
+                      <p className="text-sm text-muted-foreground">매매 백엔드와 연결을 확인해주세요</p>
                     </div>
                   </div>
                 )}
@@ -223,7 +279,24 @@ export default function Strategies() {
 
                 <div className="flex justify-end gap-3">
                   <Button variant="outline">초기화</Button>
-                  <Button onClick={handleSaveParams}>설정 저장</Button>
+                  <Button variant="outline" onClick={handleSaveParams}>설정 저장</Button>
+                  <Button 
+                    onClick={handleApplyToBackend}
+                    disabled={isApplying}
+                    className="gap-2"
+                  >
+                    {isApplying ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        적용 중...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        백엔드에 즉시 적용
+                      </>
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

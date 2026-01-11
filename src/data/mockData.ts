@@ -1,3 +1,47 @@
+// 서버 리소스 상태
+export interface ServerResource {
+  cpuUsage: number;
+  memoryUsage: number;
+  memoryTotal: number;
+  uptime: number;
+}
+
+export const serverResource: ServerResource = {
+  cpuUsage: 23.5,
+  memoryUsage: 4.2,
+  memoryTotal: 8.0,
+  uptime: 172800, // seconds (2 days)
+};
+
+// 매매 엔진 프로세스 상태
+export interface EngineProcess {
+  id: string;
+  name: string;
+  status: 'running' | 'stopped' | 'error';
+  lastHeartbeat: string;
+  pid: number;
+}
+
+export const engineProcesses: EngineProcess[] = [
+  { id: 'engine-1', name: 'Main Trading Engine', status: 'running', lastHeartbeat: '2024-01-15 14:35:10', pid: 12345 },
+  { id: 'engine-2', name: 'Order Executor', status: 'running', lastHeartbeat: '2024-01-15 14:35:12', pid: 12346 },
+  { id: 'engine-3', name: 'Risk Monitor', status: 'running', lastHeartbeat: '2024-01-15 14:35:11', pid: 12347 },
+  { id: 'engine-4', name: 'Data Collector', status: 'error', lastHeartbeat: '2024-01-15 14:30:00', pid: 12348 },
+];
+
+// 백엔드 연결 상태
+export interface BackendStatus {
+  isConnected: boolean;
+  lastPing: string;
+  latency: number;
+}
+
+export const backendStatus: BackendStatus = {
+  isConnected: true,
+  lastPing: '2024-01-15 14:35:12',
+  latency: 12,
+};
+
 // 전략 데이터
 export interface Strategy {
   id: string;
@@ -99,19 +143,20 @@ export interface TradeLog {
   price: number;
   status: 'success' | 'pending' | 'failed';
   message?: string;
+  reason?: string; // 매매 근거
 }
 
 export const tradeLogs: TradeLog[] = [
-  { id: '1', timestamp: '14:35:12', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005930', stockName: '삼성전자', quantity: 50, price: 72400, status: 'success' },
-  { id: '2', timestamp: '14:33:28', strategy: '급등주 추적', action: 'buy', ticker: '373220', stockName: 'LG에너지솔루션', quantity: 5, price: 425000, status: 'success' },
-  { id: '3', timestamp: '14:32:05', strategy: '모멘텀 전략 A', action: 'buy', ticker: '000660', stockName: 'SK하이닉스', quantity: 30, price: 168500, status: 'success' },
-  { id: '4', timestamp: '14:28:44', strategy: 'ETF 차익거래', action: 'sell', ticker: '069500', stockName: 'KODEX 200', quantity: 200, price: 35850, status: 'success' },
-  { id: '5', timestamp: '14:25:33', strategy: '스캘핑 전략 B', action: 'buy', ticker: '035720', stockName: '카카오', quantity: 100, price: 48750, status: 'success' },
-  { id: '6', timestamp: '14:22:11', strategy: '변동성 돌파', action: 'buy', ticker: '035420', stockName: 'NAVER', quantity: 20, price: 192500, status: 'failed', message: 'API 연결 오류' },
-  { id: '7', timestamp: '14:18:45', strategy: '모멘텀 전략 A', action: 'sell', ticker: '051910', stockName: 'LG화학', quantity: 15, price: 485000, status: 'success' },
-  { id: '8', timestamp: '14:15:22', strategy: '급등주 추적', action: 'sell', ticker: '006400', stockName: '삼성SDI', quantity: 8, price: 412000, status: 'success' },
-  { id: '9', timestamp: '14:12:08', strategy: 'ETF 차익거래', action: 'buy', ticker: '102110', stockName: 'TIGER 200', quantity: 150, price: 35920, status: 'success' },
-  { id: '10', timestamp: '14:08:55', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005380', stockName: '현대차', quantity: 40, price: 243500, status: 'success' },
+  { id: '1', timestamp: '14:35:12', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005930', stockName: '삼성전자', quantity: 50, price: 72400, status: 'success', reason: 'MACD-Cross' },
+  { id: '2', timestamp: '14:33:28', strategy: '급등주 추적', action: 'buy', ticker: '373220', stockName: 'LG에너지솔루션', quantity: 5, price: 425000, status: 'success', reason: 'Volume-Spike' },
+  { id: '3', timestamp: '14:32:05', strategy: '모멘텀 전략 A', action: 'buy', ticker: '000660', stockName: 'SK하이닉스', quantity: 30, price: 168500, status: 'success', reason: 'RSI-Oversold' },
+  { id: '4', timestamp: '14:28:44', strategy: 'ETF 차익거래', action: 'sell', ticker: '069500', stockName: 'KODEX 200', quantity: 200, price: 35850, status: 'success', reason: 'Arbitrage-Gap' },
+  { id: '5', timestamp: '14:25:33', strategy: '스캘핑 전략 B', action: 'buy', ticker: '035720', stockName: '카카오', quantity: 100, price: 48750, status: 'success', reason: 'BB-Breakout' },
+  { id: '6', timestamp: '14:22:11', strategy: '변동성 돌파', action: 'buy', ticker: '035420', stockName: 'NAVER', quantity: 20, price: 192500, status: 'failed', message: 'API 연결 오류', reason: 'Range-Break' },
+  { id: '7', timestamp: '14:18:45', strategy: '모멘텀 전략 A', action: 'sell', ticker: '051910', stockName: 'LG화학', quantity: 15, price: 485000, status: 'success', reason: 'Take-Profit' },
+  { id: '8', timestamp: '14:15:22', strategy: '급등주 추적', action: 'sell', ticker: '006400', stockName: '삼성SDI', quantity: 8, price: 412000, status: 'success', reason: 'Momentum-Exit' },
+  { id: '9', timestamp: '14:12:08', strategy: 'ETF 차익거래', action: 'buy', ticker: '102110', stockName: 'TIGER 200', quantity: 150, price: 35920, status: 'success', reason: 'Arbitrage-Gap' },
+  { id: '10', timestamp: '14:08:55', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005380', stockName: '현대차', quantity: 40, price: 243500, status: 'success', reason: 'Stop-Loss' },
 ];
 
 // 보유 종목 데이터
@@ -181,7 +226,7 @@ export const portfolioSummary = {
   investedAmount: 1278670000,
 };
 
-// API 연결 상태
+// API 연결 상태 (증권사 API는 매매 백엔드를 통해 연결)
 export const apiStatus = {
   kiwoom: 'connected' as const,
   koreaInvest: 'connected' as const,
