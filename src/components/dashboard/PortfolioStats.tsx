@@ -28,14 +28,14 @@ interface StatCardProps {
 function StatCard({ icon: Icon, label, value, subValue, trend, iconColor }: StatCardProps) {
   return (
     <Card>
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground font-medium">{label}</p>
-            <p className="text-2xl font-semibold font-mono mt-1">{value}</p>
+            <p className="text-xs text-muted-foreground font-medium">{label}</p>
+            <p className="text-lg font-semibold font-mono mt-0.5 leading-tight">{value}</p>
             {subValue && (
               <p className={cn(
-                "text-sm font-mono mt-0.5",
+                "text-xs font-mono mt-0.5 leading-tight",
                 trend === 'up' && "profit-text",
                 trend === 'down' && "loss-text",
                 trend === 'neutral' && "text-muted-foreground"
@@ -44,8 +44,8 @@ function StatCard({ icon: Icon, label, value, subValue, trend, iconColor }: Stat
               </p>
             )}
           </div>
-          <div className={cn("p-2 rounded-lg", iconColor || "bg-primary/10")}>
-            <Icon className={cn("w-5 h-5", iconColor ? "text-white" : "text-primary")} />
+          <div className={cn("p-1.5 rounded-lg", iconColor || "bg-primary/10")}>
+            <Icon className={cn("w-4 h-4", iconColor ? "text-white" : "text-primary")} />
           </div>
         </div>
       </CardContent>
@@ -58,7 +58,7 @@ export function PortfolioStats() {
   const isPositive = totalProfit >= 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
       <StatCard
         icon={Wallet}
         label="투자금액"

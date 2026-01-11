@@ -9,48 +9,49 @@ export function ProfitChart() {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 px-4 pt-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-muted-foreground" />
-            <CardTitle className="text-base font-medium">금일 수익률 추이</CardTitle>
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">금일 수익률 추이</CardTitle>
           </div>
-          <span className={`font-mono font-semibold ${isPositive ? 'profit-text' : 'loss-text'}`}>
+          <span className={`font-mono font-semibold text-sm ${isPositive ? 'profit-text' : 'loss-text'}`}>
             {isPositive ? '+' : ''}{latestProfit.toFixed(2)}%
           </span>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-48">
+      <CardContent className="px-4 pb-3">
+        <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={profitChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={profitChartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis 
-                dataKey="time" 
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              <XAxis
+                dataKey="time"
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
               />
-              <YAxis 
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              <YAxis
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${value}%`}
                 domain={['dataMin - 0.1', 'dataMax + 0.1']}
               />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  boxShadow: '0 4px 12px hsl(var(--shadow) / 0.1)',
+                  fontSize: '12px',
                 }}
-                labelStyle={{ color: 'hsl(var(--foreground))' }}
+                labelStyle={{ color: 'hsl(var(--foreground))', fontSize: '12px' }}
                 formatter={(value: number) => [`${value.toFixed(2)}%`, '수익률']}
               />
               <Area

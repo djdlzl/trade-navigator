@@ -6,14 +6,11 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Settings, Key, Bell, Shield, Database, Server, Info } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const { toast } = useToast();
-
   const handleSave = () => {
-    toast({
-      title: "설정 저장 완료",
+    toast.success("설정 저장 완료", {
       description: "시스템 설정이 업데이트되었습니다.",
     });
   };
@@ -32,7 +29,7 @@ export default function SettingsPage() {
         <AlertDescription className="ml-2">
           <span className="font-medium">자체 매매 백엔드 아키텍처</span>
           <p className="text-sm text-muted-foreground mt-1">
-            모든 매매 데이터는 직접 개발한 '매매 백엔드(Trading Backend)'에서 수신됩니다. 
+            모든 매매 데이터는 직접 개발한 '매매 백엔드(Trading Backend)'에서 수신됩니다.
             아래에서 입력하는 증권사 API 키는 플랫폼 DB에 암호화되어 저장된 후, 매매 시스템으로 안전하게 전달됩니다.
           </p>
         </AlertDescription>
@@ -111,10 +108,10 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="backend-url">백엔드 서버 URL</Label>
-              <Input 
-                id="backend-url" 
-                type="text" 
-                placeholder="wss://trading-backend.example.com" 
+              <Input
+                id="backend-url"
+                type="text"
+                placeholder="wss://trading-backend.example.com"
                 className="font-mono"
               />
               <p className="text-xs text-muted-foreground">WebSocket 연결 주소</p>

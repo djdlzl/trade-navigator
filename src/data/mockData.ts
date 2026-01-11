@@ -131,7 +131,7 @@ export const strategies: Strategy[] = [
   },
 ];
 
-// 매매 로그 데이터
+// 매매 로그 데이터 (Enhanced with categorization)
 export interface TradeLog {
   id: string;
   timestamp: string;
@@ -146,6 +146,55 @@ export interface TradeLog {
   reason?: string; // 매매 근거
 }
 
+// Enhanced log structure with categorization
+export interface CategorizedTradeLog extends TradeLog {
+  category: 'System' | 'Strategy' | 'Trade';
+}
+
+// System health metrics interface
+export interface SystemHealthMetrics {
+  engineStatus: {
+    status: 'running' | 'stopped' | 'error';
+    processes: EngineProcess[];
+  };
+  serverLoad: {
+    cpuUsage: number;
+    memoryUsage: number;
+    memoryTotal: number;
+  };
+}
+
+// Log category configuration
+export interface LogCategoryConfig {
+  System: {
+    color: string;
+    icon: string;
+  };
+  Strategy: {
+    color: string;
+    icon: string;
+  };
+  Trade: {
+    color: string;
+    icon: string;
+  };
+}
+
+export const logCategoryConfig: LogCategoryConfig = {
+  System: {
+    color: 'text-blue-400',
+    icon: 'Settings',
+  },
+  Strategy: {
+    color: 'text-yellow-400',
+    icon: 'TrendingUp',
+  },
+  Trade: {
+    color: 'text-green-400',
+    icon: 'ArrowUpDown',
+  },
+};
+
 export const tradeLogs: TradeLog[] = [
   { id: '1', timestamp: '14:35:12', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005930', stockName: '삼성전자', quantity: 50, price: 72400, status: 'success', reason: 'MACD-Cross' },
   { id: '2', timestamp: '14:33:28', strategy: '급등주 추적', action: 'buy', ticker: '373220', stockName: 'LG에너지솔루션', quantity: 5, price: 425000, status: 'success', reason: 'Volume-Spike' },
@@ -158,6 +207,46 @@ export const tradeLogs: TradeLog[] = [
   { id: '9', timestamp: '14:12:08', strategy: 'ETF 차익거래', action: 'buy', ticker: '102110', stockName: 'TIGER 200', quantity: 150, price: 35920, status: 'success', reason: 'Arbitrage-Gap' },
   { id: '10', timestamp: '14:08:55', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005380', stockName: '현대차', quantity: 40, price: 243500, status: 'success', reason: 'Stop-Loss' },
 ];
+
+// Enhanced categorized trade logs with System, Strategy, and Trade categories
+export const categorizedTradeLogs: CategorizedTradeLog[] = [
+  // Trade category logs
+  { id: '1', timestamp: '14:35:12', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005930', stockName: '삼성전자', quantity: 50, price: 72400, status: 'success', reason: 'MACD-Cross', category: 'Trade' },
+  { id: '2', timestamp: '14:33:28', strategy: '급등주 추적', action: 'buy', ticker: '373220', stockName: 'LG에너지솔루션', quantity: 5, price: 425000, status: 'success', reason: 'Volume-Spike', category: 'Trade' },
+  { id: '3', timestamp: '14:32:05', strategy: '모멘텀 전략 A', action: 'buy', ticker: '000660', stockName: 'SK하이닉스', quantity: 30, price: 168500, status: 'success', reason: 'RSI과매도', category: 'Trade' },
+  { id: '4', timestamp: '14:28:44', strategy: 'ETF 차익거래', action: 'sell', ticker: '069500', stockName: 'KODEX 200', quantity: 200, price: 35850, status: 'success', reason: 'Arbitrage-Gap', category: 'Trade' },
+  { id: '5', timestamp: '14:25:33', strategy: '스캘핑 전략 B', action: 'buy', ticker: '035720', stockName: '카카오', quantity: 100, price: 48750, status: 'success', reason: 'BB-Breakout', category: 'Trade' },
+  { id: '6', timestamp: '14:22:11', strategy: '변동성 돌파', action: 'buy', ticker: '035420', stockName: 'NAVER', quantity: 20, price: 192500, status: 'failed', message: 'API 연결 오류', reason: 'Range-Break', category: 'Trade' },
+  { id: '7', timestamp: '14:18:45', strategy: '모멘텀 전략 A', action: 'sell', ticker: '051910', stockName: 'LG화학', quantity: 15, price: 485000, status: 'success', reason: 'Take-Profit', category: 'Trade' },
+  { id: '8', timestamp: '14:15:22', strategy: '급등주 추적', action: 'sell', ticker: '006400', stockName: '삼성SDI', quantity: 8, price: 412000, status: 'success', reason: 'Momentum-Exit', category: 'Trade' },
+  { id: '9', timestamp: '14:12:08', strategy: 'ETF 차익거래', action: 'buy', ticker: '102110', stockName: 'TIGER 200', quantity: 150, price: 35920, status: 'success', reason: 'Arbitrage-Gap', category: 'Trade' },
+  { id: '10', timestamp: '14:08:55', strategy: '스캘핑 전략 B', action: 'sell', ticker: '005380', stockName: '현대차', quantity: 40, price: 243500, status: 'success', reason: 'Stop-Loss', category: 'Trade' },
+
+  // System category logs
+  { id: 'sys1', timestamp: '14:23:15', strategy: '', action: 'buy', ticker: '', stockName: '', quantity: 0, price: 0, status: 'success', message: '매매 엔진 재시작 완료', category: 'System' },
+  { id: 'sys2', timestamp: '14:20:30', strategy: '', action: 'buy', ticker: '', stockName: '', quantity: 0, price: 0, status: 'success', message: 'API 연결 상태 정상화', category: 'System' },
+  { id: 'sys3', timestamp: '14:15:45', strategy: '', action: 'buy', ticker: '', stockName: '', quantity: 0, price: 0, status: 'success', message: '데이터 수집기 재연결 완료', category: 'System' },
+  { id: 'sys4', timestamp: '14:10:12', strategy: '', action: 'buy', ticker: '', stockName: '', quantity: 0, price: 0, status: 'success', message: '시스템 백업 완료', category: 'System' },
+
+  // Strategy category logs
+  { id: 'str1', timestamp: '14:23:20', strategy: '모멘텀 전략 A', action: 'buy', ticker: '005930', stockName: '삼성전자', quantity: 0, price: 0, status: 'success', message: 'RSI 과매도 신호 감지 - 삼성전자', category: 'Strategy' },
+  { id: 'str2', timestamp: '14:21:35', strategy: '스캘핑 전략 B', action: 'sell', ticker: '035720', stockName: '카카오', quantity: 0, price: 0, status: 'success', message: 'MACD 크로스 신호 - 카카오', category: 'Strategy' },
+  { id: 'str3', timestamp: '14:19:50', strategy: '급등주 추적', action: 'buy', ticker: '373220', stockName: 'LG에너지솔루션', quantity: 0, price: 0, status: 'success', message: '거래량 급증 감지 - LG에너지솔루션', category: 'Strategy' },
+  { id: 'str4', timestamp: '14:17:25', strategy: 'ETF 차익거래', action: 'buy', ticker: '069500', stockName: 'KODEX 200', quantity: 0, price: 0, status: 'success', message: '괴리율 임계치 도달 - KODEX 200', category: 'Strategy' },
+];
+
+// System health data
+export const systemHealthData: SystemHealthMetrics = {
+  engineStatus: {
+    status: 'running',
+    processes: engineProcesses,
+  },
+  serverLoad: {
+    cpuUsage: serverResource.cpuUsage,
+    memoryUsage: serverResource.memoryUsage,
+    memoryTotal: serverResource.memoryTotal,
+  },
+};
 
 // 보유 종목 데이터
 export interface Holding {

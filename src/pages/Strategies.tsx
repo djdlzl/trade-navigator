@@ -19,13 +19,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, Settings2, TrendingUp, TrendingDown, StopCircle, Loader2, Send } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function Strategies() {
   const [strategies, setStrategies] = useState<Strategy[]>(initialStrategies);
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(strategies[0]);
   const [isApplying, setIsApplying] = useState(false);
-  const { toast } = useToast();
 
   const handleToggleStrategy = (id: string, active: boolean) => {
     setStrategies(prev =>
@@ -43,7 +42,7 @@ export default function Strategies() {
   const handleParamChange = (field: 'takeProfitPercent' | 'stopLossPercent', value: string) => {
     if (!selectedStrategy) return;
     const numValue = parseFloat(value) || 0;
-    
+
     setSelectedStrategy(prev => prev ? { ...prev, [field]: numValue } : null);
     setStrategies(prev =>
       prev.map(s =>
@@ -61,29 +60,30 @@ export default function Strategies() {
     if (selectedStrategy) {
       setSelectedStrategy({ ...selectedStrategy, status: 'paused' });
     }
-    toast({
-      title: "긴급 정지 실행",
+    toast.error("긴급 정지 실행", {
       description: "모든 포지션이 청산되고 주문이 중단되었습니다.",
-      variant: "destructive",
     });
   };
 
-  const handleApplyToBackend = async () => {
+  const handleApplyToLive = async () => {
+    if (!selectedStrategy) return;
+
     setIsApplying(true);
-    
-    // Simulate API call to backend
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsApplying(false);
-    toast({
-      title: "백엔드 적용 완료",
-      description: `${selectedStrategy?.name} 전략 파라미터가 매매 엔진에 즉시 적용되었습니다.`,
-    });
+
+    try {
+      // Simulate API call to backend engine
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      setIsApplying(false);
+      toast.success("백엔드 엔진에 파라미터가 실시간 반영되었습니다");
+    } catch (error) {
+      setIsApplying(false);
+      toast.error("파라미터 적용 중 오류가 발생했습니다");
+    }
   };
 
   const handleSaveParams = () => {
-    toast({
-      title: "설정 저장 완료",
+    toast.success("설정 저장 완료", {
       description: `${selectedStrategy?.name} 전략 파라미터가 업데이트되었습니다.`,
     });
   };
@@ -113,17 +113,17 @@ export default function Strategies() {
                 <AlertTriangle className="w-5 h-5" />
                 긴급 정지 확인
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-base">
-                <span className="font-medium text-foreground">모든 포지션을 청산하고 주문을 중단하시겠습니까?</span>
-                <br />
-                <br />
-                이 작업은 다음을 수행합니다:
-                <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
-                  <li>실행 중인 모든 전략 즉시 중지</li>
-                  <li>미체결 주문 전량 취소</li>
-                  <li>보유 포지션 시장가 청산</li>
-                </ul>
+              <AlertDialogDescription className="text-base font-medium text-foreground">
+                전체 포지션을 청산하고 엔진을 정지하시겠습니까?
               </AlertDialogDescription>
+              <AlertDialogDescription className="text-sm">
+                이 작업은 다음을 수행합니다:
+              </AlertDialogDescription>
+              <div className="text-sm text-muted-foreground space-y-1 pl-4">
+                <div>• 실행 중인 모든 전략 즉시 중지</div>
+                <div>• 미체결 주문 전량 취소</div>
+                <div>• 보유 포지션 시장가 청산</div>
+              </div>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>취소</AlertDialogCancel>
@@ -280,8 +280,8 @@ export default function Strategies() {
                 <div className="flex justify-end gap-3">
                   <Button variant="outline">초기화</Button>
                   <Button variant="outline" onClick={handleSaveParams}>설정 저장</Button>
-                  <Button 
-                    onClick={handleApplyToBackend}
+                  <Button
+                    onClick={handleApplyToLive}
                     disabled={isApplying}
                     className="gap-2"
                   >
@@ -293,7 +293,7 @@ export default function Strategies() {
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        백엔드에 즉시 적용
+                        Apply to Live
                       </>
                     )}
                   </Button>
