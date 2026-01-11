@@ -33,7 +33,10 @@ export function AppSidebar() {
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
+      <div className={cn(
+        "h-16 flex items-center border-b border-sidebar-border",
+        collapsed ? "justify-center px-2" : "justify-between px-4"
+      )}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-sidebar-primary-foreground" />
@@ -44,7 +47,32 @@ export function AppSidebar() {
             </span>
           )}
         </div>
+        {/* Collapse Button - Only show when expanded */}
+        {!collapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 h-8 w-8 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+        )}
       </div>
+
+      {/* Expand Button - Only show when collapsed */}
+      {collapsed && (
+        <div className="px-2 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-full h-10 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1">
@@ -68,25 +96,6 @@ export function AppSidebar() {
           );
         })}
       </nav>
-
-      {/* Collapse Button */}
-      <div className="p-2 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full justify-center text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <>
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              <span>접기</span>
-            </>
-          )}
-        </Button>
-      </div>
 
       {/* Version */}
       {!collapsed && (
