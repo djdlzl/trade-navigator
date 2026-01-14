@@ -12,7 +12,7 @@ vi.mock('sonner', () => ({
 
 // Get the mocked toast functions
 import { toast } from 'sonner';
-const mockToast = toast as {
+const mockToast = toast as unknown as {
     success: ReturnType<typeof vi.fn>;
     error: ReturnType<typeof vi.fn>;
 };
