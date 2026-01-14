@@ -5,14 +5,25 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Settings, Key, Bell, Shield, Database, Server, Info } from "lucide-react";
+import { Settings, Key, Bell, Shield, Database, Server, Info, User, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { PasswordChangeDialog } from "@/components/settings/PasswordChangeDialog";
+import { useNavigate } from "react-router-dom";
 
 export default function SettingsPage() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
   const handleSave = () => {
     toast.success("설정 저장 완료", {
       description: "시스템 설정이 업데이트되었습니다.",
     });
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   return (
@@ -22,6 +33,32 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold">시스템 설정</h1>
         <p className="text-muted-foreground mt-1">시스템 전반의 설정을 관리하세요</p>
       </div>
+
+      {/* Account Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <User className="w-5 h-5 text-primary" />
+            <CardTitle>계정 설정</CardTitle>
+          </div>
+          <CardDescription>로그인된 계정 정보 및 보안 설정</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+            <div>
+              <p className="font-medium">현재 계정</p>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            </div>
+            <div className="flex gap-2">
+              <PasswordChangeDialog />
+              <Button variant="destructive" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                로그아웃
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Architecture Info Banner */}
       <Alert className="border-primary/30 bg-primary/5">
