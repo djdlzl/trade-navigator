@@ -1,21 +1,16 @@
-import { useState } from "react";
-import { strategies as initialStrategies, Strategy } from "@/data/mockData";
+import { useStrategies, useToggleStrategy, Strategy } from "@/hooks/useStrategies";
 import { StrategyCard } from "@/components/dashboard/StrategyCard";
 import { TradeTerminal } from "@/components/dashboard/TradeTerminal";
 import { ProfitChart } from "@/components/dashboard/ProfitChart";
 import { PortfolioStats } from "@/components/dashboard/PortfolioStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const [strategies, setStrategies] = useState<Strategy[]>(initialStrategies);
+  const { data: strategies, isLoading } = useStrategies();
+  const toggleStrategy = useToggleStrategy();
 
   const handleToggleStrategy = (id: string, active: boolean) => {
-    setStrategies(prev =>
-      prev.map(s =>
-        s.id === id
-          ? { ...s, status: active ? 'active' : 'paused' as const }
-          : s
-      )
-    );
+    toggleStrategy(id, active);
   };
 
   return (
@@ -44,15 +39,27 @@ export default function Dashboard() {
       {/* Strategy Cards - Reduced spacing */}
       <div>
         <h2 className="text-base font-semibold mb-3">실행 중인 전략</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {strategies.map((strategy) => (
-            <StrategyCard
-              key={strategy.id}
-              strategy={strategy}
-              onToggle={handleToggleStrategy}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-40" />
+            ))}
+          </div>
+        ) : strategies && strategies.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {strategies.map((strategy) => (
+              <StrategyCard
+                key={strategy.id}
+                strategy={strategy}
+                onToggle={handleToggleStrategy}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            등록된 전략이 없습니다. 전략 관리에서 새 전략을 추가하세요.
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { categorizedTradeLogs, CategorizedTradeLog, backendStatus } from "@/data/mockData";
+import { useRealtimeTradeLogs, transformToLegacyFormat, CategorizedTradeLog } from "@/hooks/useTradeLogs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Terminal, ArrowUpCircle, ArrowDownCircle, AlertCircle, WifiOff, Settings, TrendingUp, ArrowUpDown } from "lucide-react";
+import { Terminal, AlertCircle, WifiOff, Settings, TrendingUp, ArrowUpDown } from "lucide-react";
 
 function formatCurrency(num: number): string {
   return new Intl.NumberFormat('ko-KR').format(num);
@@ -95,15 +95,20 @@ function LogEntry({ log }: LogEntryProps) {
         {reason && (
           <span className="text-cyan-400 font-medium">[{reason}]</span>
         )}{" "}
-        <span className="text-white/60">[{strategy}]</span>{" "}
-        <span className={isBuy ? "text-terminal-text" : "text-terminal-warning"}>
-          {isBuy ? "매수" : "매도"}
-        </span>{" "}
-        <span className="text-white">{stockName}</span>
-        <span className="text-white/60">({ticker})</span>{" "}
-        <span className="text-white">{quantity}주</span>{" "}
-        <span className="text-white/60">@</span>
-        <span className="text-white">{formatCurrency(price)}원</span>
+        {strategy && <span className="text-white/60">[{strategy}]</span>}{" "}
+        {ticker && (
+          <>
+            <span className={isBuy ? "text-terminal-text" : "text-terminal-warning"}>
+              {isBuy ? "매수" : "매도"}
+            </span>{" "}
+            <span className="text-white">{stockName}</span>
+            <span className="text-white/60">({ticker})</span>{" "}
+            <span className="text-white">{quantity}주</span>{" "}
+            <span className="text-white/60">@</span>
+            <span className="text-white">{formatCurrency(price)}원</span>
+          </>
+        )}
+        {!ticker && <span className="text-white">{message}</span>}
         {isFailed && (
           <span className="text-terminal-error ml-2">⚠ {message}</span>
         )}
@@ -113,44 +118,10 @@ function LogEntry({ log }: LogEntryProps) {
 }
 
 export function TradeTerminal() {
-  const [logs, setLogs] = useState<CategorizedTradeLog[]>(categorizedTradeLogs.slice(0, 12));
-  const [isConnected, setIsConnected] = useState(backendStatus.isConnected);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Simulate incoming logs
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isConnected) return;
-
-      const randomLog = categorizedTradeLogs[Math.floor(Math.random() * categorizedTradeLogs.length)];
-      const newLog = {
-        ...randomLog,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString('ko-KR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        }),
-      };
-      setLogs(prev => [newLog, ...prev].slice(0, 20));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isConnected]);
-
-  // Simulate connection status changes (for demo)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // 10% chance of disconnection for demo
-      if (Math.random() < 0.1) {
-        setIsConnected(false);
-        setTimeout(() => setIsConnected(true), 3000);
-      }
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { logs, isLoading, isConnected } = useRealtimeTradeLogs(20);
+  
+  // Transform logs to legacy format for display
+  const displayLogs = logs.map(transformToLegacyFormat);
 
   return (
     <Card className={cn(
@@ -180,7 +151,7 @@ export function TradeTerminal() {
             ) : (
               <>
                 <WifiOff className="w-3 h-3 text-red-400" />
-                <span className="text-xs text-red-400 font-medium animate-pulse">연결 끊김</span>
+                <span className="text-xs text-red-400 font-medium animate-pulse">연결 대기</span>
               </>
             )}
           </div>
@@ -188,25 +159,36 @@ export function TradeTerminal() {
       </CardHeader>
       <CardContent className="p-0 relative">
         {/* Disconnection Warning Overlay */}
-        {!isConnected && (
+        {!isConnected && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-red-950/50 backdrop-blur-sm z-10">
             <div className="text-center">
               <WifiOff className="w-8 h-8 text-red-400 mx-auto mb-2 animate-pulse" />
-              <p className="text-red-300 font-medium text-sm">매매 백엔드 연결이 끊어졌습니다</p>
-              <p className="text-red-400/70 text-xs mt-1">재연결 시도 중...</p>
+              <p className="text-red-300 font-medium text-sm">실시간 연결 대기 중</p>
+              <p className="text-red-400/70 text-xs mt-1">데이터베이스에 로그가 기록되면 표시됩니다</p>
             </div>
           </div>
         )}
         <div
-          ref={containerRef}
           className={cn(
             "terminal-log h-56 overflow-y-auto p-3 scrollbar-thin transition-all duration-300",
             !isConnected && "opacity-30"
           )}
         >
-          {logs.map((log) => (
-            <LogEntry key={log.id} log={log} />
-          ))}
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-4 w-full bg-white/10" />
+              ))}
+            </div>
+          ) : displayLogs.length > 0 ? (
+            displayLogs.map((log) => (
+              <LogEntry key={log.id} log={log} />
+            ))
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              매매 로그가 없습니다
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
