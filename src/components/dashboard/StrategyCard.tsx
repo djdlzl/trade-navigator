@@ -1,4 +1,4 @@
-import { Strategy } from "@/data/mockData";
+import { Strategy } from "@/hooks/useStrategies";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -10,10 +10,18 @@ interface StrategyCardProps {
 }
 
 export function StrategyCard({ strategy, onToggle }: StrategyCardProps) {
-  const { id, name, description, returnRate, status, account, lastTrade, dailyTrades } = strategy;
+  const { id, name, description, profit_rate, status, updated_at } = strategy;
+  const returnRate = profit_rate || 0;
   const isPositive = returnRate >= 0;
   const isActive = status === 'active';
   const hasError = status === 'error';
+
+  // Format last trade time
+  const lastTrade = updated_at ? new Date(updated_at).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }) : '-';
 
   return (
     <Card className={cn(
@@ -32,7 +40,7 @@ export function StrategyCard({ strategy, onToggle }: StrategyCardProps) {
               )} />
               <CardTitle className="text-sm font-semibold leading-tight">{name}</CardTitle>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{description || '설명 없음'}</p>
           </div>
           <Switch
             checked={isActive}
@@ -62,19 +70,19 @@ export function StrategyCard({ strategy, onToggle }: StrategyCardProps) {
         <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-border">
           <div className="flex items-center gap-1.5 text-xs">
             <Activity className="w-3 h-3 text-muted-foreground" />
-            <span className="text-muted-foreground">거래</span>
-            <span className="font-mono font-medium ml-auto">{dailyTrades}건</span>
+            <span className="text-muted-foreground">익절</span>
+            <span className="font-mono font-medium ml-auto">{strategy.take_profit || 0}%</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs">
             <Clock className="w-3 h-3 text-muted-foreground" />
             <span className="text-muted-foreground">마지막</span>
-            <span className="font-mono text-xs ml-auto">{lastTrade.split(' ')[1]}</span>
+            <span className="font-mono text-xs ml-auto">{lastTrade}</span>
           </div>
         </div>
 
-        {/* Account Badge */}
+        {/* Position Size Badge */}
         <div className="flex items-center justify-between pt-1.5 border-t border-border">
-          <span className="text-xs text-muted-foreground">{account}</span>
+          <span className="text-xs text-muted-foreground">포지션: {strategy.position_size || 0}%</span>
           {hasError && (
             <div className="flex items-center gap-1 text-warning text-xs font-medium">
               <AlertTriangle className="w-3 h-3" />

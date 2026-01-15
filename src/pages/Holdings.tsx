@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { holdings, accounts } from "@/data/mockData";
+import { useHoldings, useAccounts, HoldingWithProfit } from "@/hooks/useHoldings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Wallet, TrendingUp, TrendingDown, Filter } from "lucide-react";
 
@@ -22,17 +23,19 @@ function formatCurrency(num: number): string {
 
 export default function Holdings() {
   const [selectedAccount, setSelectedAccount] = useState("all");
+  const { data: holdings, isLoading } = useHoldings();
+  const accounts = useAccounts();
 
   const filteredHoldings = useMemo(() => {
+    if (!holdings) return [];
     if (selectedAccount === "all") return holdings;
-    const accountName = accounts.find(a => a.id === selectedAccount)?.name;
-    return holdings.filter(h => h.account === accountName);
-  }, [selectedAccount]);
+    return holdings.filter(h => h.account_name === selectedAccount);
+  }, [selectedAccount, holdings]);
 
   const totalStats = useMemo(() => {
-    const totalValue = filteredHoldings.reduce((acc, h) => acc + (h.currentPrice * h.quantity), 0);
+    const totalValue = filteredHoldings.reduce((acc, h) => acc + h.totalValue, 0);
     const totalProfit = filteredHoldings.reduce((acc, h) => acc + h.profitAmount, 0);
-    const totalCost = filteredHoldings.reduce((acc, h) => acc + (h.avgPrice * h.quantity), 0);
+    const totalCost = filteredHoldings.reduce((acc, h) => acc + (h.avg_price * h.quantity), 0);
     const profitRate = totalCost > 0 ? ((totalProfit / totalCost) * 100) : 0;
     return { totalValue, totalProfit, profitRate };
   }, [filteredHoldings]);
@@ -72,7 +75,11 @@ export default function Holdings() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">평가금액</p>
-                <p className="text-xl font-semibold font-mono">{formatCurrency(totalStats.totalValue)}원</p>
+                {isLoading ? (
+                  <Skeleton className="h-7 w-32" />
+                ) : (
+                  <p className="text-xl font-semibold font-mono">{formatCurrency(totalStats.totalValue)}원</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -92,12 +99,16 @@ export default function Holdings() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">평가손익</p>
-                <p className={cn(
-                  "text-xl font-semibold font-mono",
-                  totalStats.totalProfit >= 0 ? "profit-text" : "loss-text"
-                )}>
-                  {totalStats.totalProfit >= 0 ? "+" : ""}{formatCurrency(totalStats.totalProfit)}원
-                </p>
+                {isLoading ? (
+                  <Skeleton className="h-7 w-32" />
+                ) : (
+                  <p className={cn(
+                    "text-xl font-semibold font-mono",
+                    totalStats.totalProfit >= 0 ? "profit-text" : "loss-text"
+                  )}>
+                    {totalStats.totalProfit >= 0 ? "+" : ""}{formatCurrency(totalStats.totalProfit)}원
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -117,12 +128,16 @@ export default function Holdings() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">수익률</p>
-                <p className={cn(
-                  "text-xl font-semibold font-mono",
-                  totalStats.profitRate >= 0 ? "profit-text" : "loss-text"
-                )}>
-                  {totalStats.profitRate >= 0 ? "+" : ""}{totalStats.profitRate.toFixed(2)}%
-                </p>
+                {isLoading ? (
+                  <Skeleton className="h-7 w-24" />
+                ) : (
+                  <p className={cn(
+                    "text-xl font-semibold font-mono",
+                    totalStats.profitRate >= 0 ? "profit-text" : "loss-text"
+                  )}>
+                    {totalStats.profitRate >= 0 ? "+" : ""}{totalStats.profitRate.toFixed(2)}%
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -138,62 +153,74 @@ export default function Holdings() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>종목명</TableHead>
-                  <TableHead>계좌</TableHead>
-                  <TableHead className="text-right">수량</TableHead>
-                  <TableHead className="text-right">평균단가</TableHead>
-                  <TableHead className="text-right">현재가</TableHead>
-                  <TableHead className="text-right">평가손익</TableHead>
-                  <TableHead className="text-right">수익률</TableHead>
-                  <TableHead className="text-right">비중</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredHoldings.map((holding) => {
-                  const isPositive = holding.profitRate >= 0;
-                  return (
-                    <TableRow key={holding.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{holding.stockName}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{holding.ticker}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">{holding.account}</span>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">{formatNumber(holding.quantity)}</TableCell>
-                      <TableCell className="text-right font-mono">{formatNumber(holding.avgPrice)}원</TableCell>
-                      <TableCell className="text-right font-mono">{formatNumber(holding.currentPrice)}원</TableCell>
-                      <TableCell className={cn("text-right font-mono", isPositive ? "profit-text" : "loss-text")}>
-                        {isPositive ? "+" : ""}{formatCurrency(holding.profitAmount)}원
-                      </TableCell>
-                      <TableCell className={cn("text-right font-mono font-medium", isPositive ? "profit-text" : "loss-text")}>
-                        {isPositive ? "+" : ""}{holding.profitRate.toFixed(2)}%
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-primary rounded-full"
-                              style={{ width: `${Math.min(holding.weight, 100)}%` }}
-                            />
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : filteredHoldings.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>종목명</TableHead>
+                    <TableHead>계좌</TableHead>
+                    <TableHead className="text-right">수량</TableHead>
+                    <TableHead className="text-right">평균단가</TableHead>
+                    <TableHead className="text-right">현재가</TableHead>
+                    <TableHead className="text-right">평가손익</TableHead>
+                    <TableHead className="text-right">수익률</TableHead>
+                    <TableHead className="text-right">비중</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredHoldings.map((holding) => {
+                    const isPositive = (holding.profit_rate || 0) >= 0;
+                    return (
+                      <TableRow key={holding.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{holding.stock_name}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{holding.stock_code}</p>
                           </div>
-                          <span className="text-sm font-mono text-muted-foreground w-12 text-right">
-                            {holding.weight.toFixed(1)}%
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">{holding.account_name}</span>
+                        </TableCell>
+                        <TableCell className="text-right font-mono">{formatNumber(holding.quantity)}</TableCell>
+                        <TableCell className="text-right font-mono">{formatNumber(holding.avg_price)}원</TableCell>
+                        <TableCell className="text-right font-mono">{formatNumber(holding.current_price)}원</TableCell>
+                        <TableCell className={cn("text-right font-mono", isPositive ? "profit-text" : "loss-text")}>
+                          {isPositive ? "+" : ""}{formatCurrency(holding.profitAmount)}원
+                        </TableCell>
+                        <TableCell className={cn("text-right font-mono font-medium", isPositive ? "profit-text" : "loss-text")}>
+                          {isPositive ? "+" : ""}{(holding.profit_rate || 0).toFixed(2)}%
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full"
+                                style={{ width: `${Math.min(holding.weight || 0, 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-mono text-muted-foreground w-12 text-right">
+                              {(holding.weight || 0).toFixed(1)}%
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              보유 종목이 없습니다
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
