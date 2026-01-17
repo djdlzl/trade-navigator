@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AlertTriangle, Settings2, TrendingUp, TrendingDown, StopCircle, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
+import { AddStrategyDialog } from "@/components/strategies/AddStrategyDialog";
 
 export default function Strategies() {
   const { data: strategies, isLoading } = useStrategies();
@@ -104,7 +105,9 @@ export default function Strategies() {
           <h1 className="text-2xl font-bold">전략 관리</h1>
           <p className="text-muted-foreground mt-1">전략 파라미터를 수정하고 실행 상태를 관리하세요</p>
         </div>
-        <AlertDialog>
+        <div className="flex items-center gap-3">
+          <AddStrategyDialog />
+          <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="destructive"
@@ -143,6 +146,7 @@ export default function Strategies() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
