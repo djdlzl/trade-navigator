@@ -1,1 +1,4 @@
 project_id = "cvfbaslfushlhxbgnepm"
+
+[functions.sync-holdings]
+verify_jwt = false

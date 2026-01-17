@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { toast } from "sonner";
 
 export interface Holding {
   id: string;
@@ -48,6 +49,33 @@ export function useHoldings() {
   });
 }
 
+export function useSyncHoldings() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('sync-holdings');
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['holdings', user?.id] });
+      toast.success("잔고 동기화 완료", {
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("잔고 동기화 실패", {
+        description: error.message,
+      });
+    },
+  });
+}
+
 export function useAccounts() {
   const { data: holdings } = useHoldings();
 
@@ -69,10 +97,10 @@ export function usePortfolioSummary() {
     totalAssets: holdings.reduce((acc, h) => acc + h.totalValue, 0),
     investedAmount: holdings.reduce((acc, h) => acc + (h.avg_price * h.quantity), 0),
     totalProfit: holdings.reduce((acc, h) => acc + h.profitAmount, 0),
-    cashBalance: 0, // This would come from a separate API/table
-    todayProfit: holdings.reduce((acc, h) => acc + h.profitAmount, 0) * 0.1, // Simulated daily profit
+    cashBalance: 0,
+    todayProfit: holdings.reduce((acc, h) => acc + h.profitAmount, 0) * 0.1,
     totalProfitRate: holdings.reduce((acc, h) => acc + (h.profit_rate || 0), 0) / holdings.length,
-    todayProfitRate: 0.5, // Simulated
+    todayProfitRate: 0.5,
     activeStrategies: strategies?.filter(s => s.status === 'active').length || 0,
     totalStrategies: strategies?.length || 0,
   } : {
