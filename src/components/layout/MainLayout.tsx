@@ -7,9 +7,10 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen bg-background">
       <AppSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main content area with left margin to account for fixed sidebar */}
+      <div className="ml-64 flex flex-col min-h-screen transition-all duration-300">
         <AppHeader />
         <main className="flex-1 overflow-auto p-6">
           {children}
