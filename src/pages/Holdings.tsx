@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { useHoldings, useAccounts, HoldingWithProfit } from "@/hooks/useHoldings";
+import { useHoldings, useAccounts, useSyncHoldings, HoldingWithProfit } from "@/hooks/useHoldings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Wallet, TrendingUp, TrendingDown, Filter } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Filter, RefreshCw, CloudDownload } from "lucide-react";
 
 function formatNumber(num: number): string {
   return new Intl.NumberFormat('ko-KR').format(num);
@@ -23,8 +24,9 @@ function formatCurrency(num: number): string {
 
 export default function Holdings() {
   const [selectedAccount, setSelectedAccount] = useState("all");
-  const { data: holdings, isLoading } = useHoldings();
+  const { data: holdings, isLoading, refetch } = useHoldings();
   const accounts = useAccounts();
+  const syncHoldings = useSyncHoldings();
 
   const filteredHoldings = useMemo(() => {
     if (!holdings) return [];
@@ -40,6 +42,10 @@ export default function Holdings() {
     return { totalValue, totalProfit, profitRate };
   }, [filteredHoldings]);
 
+  const handleSync = () => {
+    syncHoldings.mutate();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -48,20 +54,36 @@ export default function Holdings() {
           <h1 className="text-2xl font-bold">통합 잔고</h1>
           <p className="text-muted-foreground mt-1">전 계좌 보유 종목 현황을 확인하세요</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="계좌 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((account) => (
-                <SelectItem key={account.id} value={account.id}>
-                  {account.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncHoldings.isPending}
+            className="gap-2"
+          >
+            {syncHoldings.isPending ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <CloudDownload className="w-4 h-4" />
+            )}
+            증권사 연동
+          </Button>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="계좌 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
